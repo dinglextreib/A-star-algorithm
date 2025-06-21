@@ -3,8 +3,8 @@ let grd_width = 15
 let grd_height = 15
 let grd_size = 50
 
-let start = [7,7]
-let goal = [5,1]
+let start = [13,12]
+let goal = [2,1]
 let blocked = [
     //[1,2],
     [9,9],
@@ -28,8 +28,7 @@ let blocked = [
     [3,0],
 ]
 
-let ts = [10, 5, 100, 50, 1,]
-console.log(ts.sort(function(a, b){return a - b}))
+
 
 
 let mainLoop
@@ -83,7 +82,7 @@ window.onload = function() {
 
     prg.push(start)
     loop()
-    //mainLoop = setInterval(loop, 100)
+    mainLoop = setInterval(loop, 100)
     
 
 }
@@ -122,15 +121,15 @@ function draw() {
 
             if (typeof i != "string") {
                 if (debug_vision) {
-                    getDiv(prs).style.backgroundColor = `rgb(${255/i},0,${255/i})`
-                    getDiv(prs).style.color = "white"
+                    getDiv(prs).style.backgroundColor = "yellow"
+                    getDiv(prs).style.color = "brown"
                     getDiv(prs).textContent = Math.floor(i*1000)/1000
                     getDiv(prs).style.fontSize = ` ${grd_size/5}px`
                 }
                 for (let pt of prg) {
                     //console.log(prs, pt)
                     if (prs[0] == pt[0] && prs[1] == pt[1]) {
-                        //getDiv(prs).style.backgroundColor = "orange"
+                        getDiv(prs).style.backgroundColor = "orange"
                         if (!debug_vision) {getDiv(prs).style.backgroundColor = "green"}
                     }
             }
@@ -146,15 +145,39 @@ function magnitude(a, b) {
 
 function calc_next() {
     last_pt = prg[prg.length-1]
-    let temp = [[],[]]
+    let dat = []
     for (let x of alwd_nds) {
         let ndp = [last_pt[0] + x[0], last_pt[1] + x[1]]
         if (grd[ndp[0]][ndp[1]] != "blocked") {
             grd[ndp[0]][ndp[1]] = magnitude(goal, ndp) + magnitude(ndp, last_pt)
-            temp[0].push(ndp); temp[1].push(magnitude(goal, ndp))
+            dat.push([ndp, magnitude(goal, ndp) + magnitude(ndp, last_pt), magnitude(goal, ndp)])
         }    
     }
-    prg.push(temp[0][temp[1].indexOf(Math.min(...temp[1]))])
+
+
+    dat.sort(function(a, b) {
+    return a[1] - b[1];
+    })
+    let grp = []
+    for (let x in dat) {
+        if (dat[x][3] == undefined) {
+            let ox = dat[x]
+            grp.push([])
+            for (let y in dat) {
+                let oy = dat[y]         
+                if (oy[1] == ox[1]) {
+                    grp[grp.length-1].push(oy)
+                    dat[y][3] = true
+                }
+            
+            }
+          dat[x][3] = true  
+        }
+        
+    }
+
+    //console.log(grp[0][0][1])
+    prg.push(grp[0][0][0])
     
 }
 

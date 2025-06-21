@@ -1,95 +1,142 @@
 
-let grd_width = 11
-let grd_height = 9
+let grd_width = 15
+let grd_height = 15
 let grd_size = 50
 
-let stp = {x:5, y:5}
-let goal = {x:0, y:0}
+let start = [7,7]
+let goal = [5,1]
+let blocked = [
+    //[1,2],
+    [9,9],
+    [9,8],
+    [9,7],
+    [9,6],
+    [10,9],
+    //[11,9],
+    //[12,9],
+    [13,9],
+    [14,9],
+    //[10,7],
 
-let crtp = stp
+    [7,3],
+    [6,3],
+    [5,3],
+    [4,3],
+    [3,3],
+    [3,2],
+    [3,1],
+    [3,0],
+]
+
+let ts = [10, 5, 100, 50, 1,]
+console.log(ts.sort(function(a, b){return a - b}))
+
+
+let mainLoop
+let debug_vision = true
 let grd = []
+let prg = []
 let alwd_nds = [
     [0,1],
     [1,0],
     [0,-1],
-    [-1,0]
-
-
+    [-1,0],
+    [1,1],
+    [1,-1],
+    [-1,1],
+    [-1,-1],
+    //[1,-1],
 ]
+
+window.addEventListener("keydown", function(input) {
+    if (input.key == "w") {
+        loop()
+    }
+})
 
 window.onload = function() {
     let grid = document.getElementById("grid")
 
     for (let i = 0; i < grd_width; i++) {
-        grid.style.gridTemplateColumns += ` ${grd_size}px`
-        
+        grid.style.gridTemplateColumns += ` ${grd_size}px`      
     }
     
-    for (let y = 0;y < grd_height; y++ ) {
-        grd.push([])
-        for (let x = 0;x < grd_width; x++ ) {
-            grd[y][x] = undefined
-            let nw = document.createElement("div")
-            nw.id = x+(grd_width*y)+1
-            // nw.textContent = y+(grd_width*x)+1
-            nw.style.height = `${grd_size}px`
-        
-            grid.appendChild(nw)
+    for (let x = 0;x < grd_width; x++ ) {
+        grd[x] = []
+        for (let y = 0;y < grd_height; y++ ) {
+            grd[x][y] = "emt"           
         }
     }
 
+    for (let x = 0;x < grd_width*grd_height; x++ ) {       
+        let nw = document.createElement("div")
+        //nw.textContent = x
+        nw.id = x
+        nw.style.height = `${grd_size}px`   
+        grid.appendChild(nw)
+    }
 
-    grd[1][1] = "blocked"
-    grd[6][5] = "blocked"
-    console.log(grd)
-    getDiv(stp.x, stp.y).style.backgroundColor = "red"
-    getDiv(goal.x, goal.y).style.backgroundColor = "blue"  
-     
-    mov()
-    redraw()
-    console.log(grd[6][5])
+    for (let x of blocked) {
+        grd[x[0]][x[1]] = "blocked"
+    }
+
+
+    prg.push(start)
+    loop()
+    //mainLoop = setInterval(loop, 100)
     
 
 }
 
-function mov() {
-    let temp = [[],[]]
-     for (let x of alwd_nds) {
+function loop() {
+    let lp = prg[prg.length-1]
+    if (lp[0] == goal[0] && lp[1] == goal[1]) {
+        clearInterval(mainLoop)
+        console.log("goal reached!")
+        return
+    }
 
-        let np = [crtp.y + x[1], crtp.x + x[0]]
-        if (true) {
-            if (grd[np[0]][np[1]] != "blocked") {
-                temp[0].push(calc_cost(np))
-                temp[1].push(np)
-                grd[np[1]][np[0]] = calc_cost(np)
-                let nd = getDiv(np[1], np[0])
-                nd.style.backgroundColor = "yellow"
-                nd.textContent = Math.floor(calc_cost(np)*1000)/1000
-            } else {console.log("BLOCKED"); console.log(np)}
-            
-        }        
-     }
-     console.log("ss")
-     let mn = temp[1][temp[0].indexOf(Math.min(...temp[0]))]
-     getDiv(mn[0], mn[1]).style.backgroundColor = "orange"
+    
+    calc_next()
+    draw()
 }
 
-function grdp(x,y) {
-    return grd[y][x]
-}
+function draw() {
+    getDiv(start).style.backgroundColor = "red"
+    getDiv(start).textContent = "str"
+    getDiv(start).style.color = "darkred"
+    getDiv(goal).textContent = "goal"
+    getDiv(goal).style.backgroundColor = "blue"
+    getDiv(goal).style.color = "lightblue"
+    
 
-function redraw() {
-    for (let y in grd) {
-        for (let x in grd[y]) {
-            if (grd[y][x] == "blocked") {
-                getDiv(parseInt(x),parseInt(y)).style.backgroundColor = "grey"
+    grd[start[0]][start[1]] = "start"
+    grd[goal[0]][goal[1]] = "goal"
+    for (let x in grd) {
+        for (let y in grd[x]) {
+            let i = grd[x][y]
+            let prs = [parseInt(x),parseInt(y)]
+            if (i == "blocked") {
+                getDiv(prs).style.backgroundColor = "rgb(126, 126, 126)"
+            }
+
+            if (typeof i != "string") {
+                if (debug_vision) {
+                    getDiv(prs).style.backgroundColor = `rgb(${255/i},0,${255/i})`
+                    getDiv(prs).style.color = "white"
+                    getDiv(prs).textContent = Math.floor(i*1000)/1000
+                    getDiv(prs).style.fontSize = ` ${grd_size/5}px`
+                }
+                for (let pt of prg) {
+                    //console.log(prs, pt)
+                    if (prs[0] == pt[0] && prs[1] == pt[1]) {
+                        //getDiv(prs).style.backgroundColor = "orange"
+                        if (!debug_vision) {getDiv(prs).style.backgroundColor = "green"}
+                    }
+            }
             }
         }
     }
-}
-
-function calc_cost(a) {
-    return magnitude(goal, a)
 }
 
 function magnitude(a, b) {
@@ -97,13 +144,30 @@ function magnitude(a, b) {
     return Math.sqrt(unt.x**2 + unt.y**2)
 }
 
+function calc_next() {
+    last_pt = prg[prg.length-1]
+    let temp = [[],[]]
+    for (let x of alwd_nds) {
+        let ndp = [last_pt[0] + x[0], last_pt[1] + x[1]]
+        if (grd[ndp[0]][ndp[1]] != "blocked") {
+            grd[ndp[0]][ndp[1]] = magnitude(goal, ndp) + magnitude(ndp, last_pt)
+            temp[0].push(ndp); temp[1].push(magnitude(goal, ndp))
+        }    
+    }
+    prg.push(temp[0][temp[1].indexOf(Math.min(...temp[1]))])
+    
+}
+
 function unit(a, b) {
-    let dx = a.x - b[0]
-    let dy = a.y - b[1]
+    let dx = a[0] - b[0]
+    let dy = a[1] - b[1]
     return {x:dx, y:dy}    
 }
 
-function getDiv(x,y) {
-    return document.getElementById(x+(grd_width*y)+1)
+function getDiv(crt) {   
+    if (grd[crt[0]].includes(grd[crt[0]][crt[1]])) {
+        //console.log(crt)
+        return document.getElementById(crt[0]+(grd_width*crt[1]))
+    }
 }
 
